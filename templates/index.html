@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Car Control</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #0f0f1a;
+    --border: #1e1e30;
+    --text: #e8e8f0;
+    --muted: #555570;
+    --orange: #FF6B35;
+    --red: #E63946;
+    --teal: #2EC4B6;
+    --blue: #4361EE;
+    --yellow: #F4D03F;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 50;
+  }
+
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--orange), var(--red));
+    display: flex; align-items: center; justify-content: center; font-size: 22px;
+  }
+  .logo-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; }
+  .logo-sub { font-size: 10px; color: var(--muted); letter-spacing: 3px; text-transform: uppercase; }
+
+  #car-name-input {
+    background: transparent; border: none; border-bottom: 1px solid var(--orange);
+    color: var(--text); font-family: 'Syne', sans-serif; font-size: 18px;
+    font-weight: 800; outline: none; width: 180px;
+  }
+
+  .km-box {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+    padding: 8px 18px; text-align: center; cursor: pointer;
+    transition: border-color .2s;
+  }
+  .km-box:hover { border-color: var(--orange); }
+  .km-value { font-size: 24px; font-weight: 700; color: var(--orange); letter-spacing: 2px; }
+  .km-label { font-size: 10px; color: var(--muted); letter-spacing: 3px; text-transform: uppercase; }
+  #km-input {
+    background: transparent; border: none; color: var(--orange);
+    font-size: 24px; font-weight: 700; width: 110px; text-align: center;
+    font-family: 'Space Mono', monospace; outline: none;
+  }
+
+  /* ── Alert bar ── */
+  #alert-bar {
+    background: linear-gradient(90deg, var(--red), var(--orange));
+    padding: 10px 24px; font-size: 13px; font-weight: 700;
+    letter-spacing: 1px; display: none;
+  }
+
+  /* ── Tabs ── */
+  .tabs {
+    display: flex; background: var(--surface);
+    border-bottom: 1px solid var(--border); padding: 0 24px;
+  }
+  .tab {
+    background: none; border: none; border-bottom: 2px solid transparent;
+    color: var(--muted); padding: 14px 20px; cursor: pointer;
+    font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase; transition: all .2s;
+  }
+  .tab.active { color: var(--orange); border-bottom-color: var(--orange); }
+
+  /* ── Main ── */
+  main { padding: 24px; max-width: 700px; margin: 0 auto; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ── Stats ── */
+  .stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--surface); border-radius: 12px; padding: 16px;
+    text-align: center; border: 1px solid var(--border);
+  }
+  .stat-icon { font-size: 24px; margin-bottom: 4px; }
+  .stat-value { font-size: 30px; font-weight: 700; }
+  .stat-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+  /* ── Section title ── */
+  .section-title {
+    font-size: 10px; color: var(--muted); letter-spacing: 3px;
+    text-transform: uppercase; margin-bottom: 12px; margin-top: 20px;
+  }
+
+  /* ── Category cards ── */
+  .cat-card {
+    background: var(--surface); border-radius: 8px; padding: 12px 16px;
+    margin-bottom: 10px; display: flex; align-items: center;
+    justify-content: space-between; cursor: pointer;
+    border-left: 3px solid transparent; border: 1px solid var(--border);
+    transition: opacity .2s;
+  }
+  .cat-card:hover { opacity: .85; }
+  .cat-left { display: flex; align-items: center; gap: 10px; }
+  .cat-name { font-weight: 700; font-size: 14px; }
+  .cat-count { font-size: 11px; color: var(--muted); }
+  .badge {
+    background: var(--red); color: #fff; border-radius: 20px;
+    padding: 2px 10px; font-size: 12px; font-weight: 700;
+  }
+
+  /* ── Item cards ── */
+  .item-card {
+    background: var(--surface); border-radius: 10px; padding: 14px 16px;
+    margin-bottom: 10px; cursor: pointer; border: 1px solid var(--border);
+    transition: opacity .2s;
+  }
+  .item-card:hover { opacity: .85; }
+  .item-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+  .item-name { font-weight: 700; font-size: 14px; }
+  .item-cat { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .item-status {
+    font-size: 10px; font-weight: 700; padding: 2px 8px;
+    border-radius: 4px; letter-spacing: 1px; white-space: nowrap;
+  }
+  .item-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+  .progress-bar { background: var(--border); border-radius: 4px; height: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; transition: width .5s; }
+
+  /* ── List header ── */
+  .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .btn-add {
+    background: linear-gradient(135deg, var(--orange), var(--red));
+    border: none; border-radius: 8px; color: #fff;
+    padding: 8px 16px; font-size: 11px; font-weight: 700;
+    cursor: pointer; font-family: 'Space Mono', monospace; letter-spacing: 1px;
+  }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.85);
+    display: flex; align-items: flex-end; justify-content: center;
+    z-index: 200; opacity: 0; pointer-events: none; transition: opacity .25s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--surface); border-radius: 16px 16px 0 0;
+    border: 1px solid var(--border); padding: 24px;
+    width: 100%; max-width: 480px;
+    transform: translateY(40px); transition: transform .25s;
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-header { display: flex; justify-content: space-between; margin-bottom: 16px; }
+  .modal-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; }
+  .modal-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .btn-close {
+    background: var(--border); border: none; color: #888; border-radius: 8px;
+    width: 32px; height: 32px; cursor: pointer; font-size: 16px;
+  }
+  .detail-row {
+    display: flex; justify-content: space-between;
+    padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+  }
+  .detail-row span:first-child { color: var(--muted); }
+  .detail-row span:last-child { font-weight: 700; }
+  .btn-done {
+    width: 100%; margin-top: 20px;
+    background: linear-gradient(135deg, var(--teal), var(--blue));
+    border: none; border-radius: 10px; color: #fff;
+    padding: 14px; font-size: 14px; font-weight: 700;
+    cursor: pointer; font-family: 'Space Mono', monospace; letter-spacing: 1px;
+  }
+  .btn-delete {
+    width: 100%; margin-top: 10px;
+    background: transparent; border: 1px solid var(--red);
+    border-radius: 10px; color: var(--red);
+    padding: 10px; font-size: 12px; font-weight: 700;
+    cursor: pointer; font-family: 'Space Mono', monospace; letter-spacing: 1px;
+  }
+
+  /* ── Form ── */
+  .form-group { margin-bottom: 14px; }
+  .form-label { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; display: block; }
+  .form-input, .form-select {
+    width: 100%; background: var(--border); border: 1px solid #2a2a3e;
+    border-radius: 8px; color: var(--text); padding: 10px 14px;
+    font-family: 'Space Mono', monospace; font-size: 13px; outline: none;
+  }
+  .form-input:focus, .form-select:focus { border-color: var(--orange); }
+  .form-select option { background: var(--surface); }
+  .btn-submit {
+    width: 100%; margin-top: 8px;
+    background: linear-gradient(135deg, var(--orange), var(--red));
+    border: none; border-radius: 10px; color: #fff;
+    padding: 14px; font-size: 14px; font-weight: 700;
+    cursor: pointer; font-family: 'Space Mono', monospace; letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🚗</div>
+    <div>
+      <div id="car-name-display" class="logo-title" onclick="editCarName()" style="cursor:pointer"></div>
+      <input id="car-name-input" style="display:none" onblur="saveCarName()" onkeydown="if(event.key==='Enter')saveCarName()">
+      <div class="logo-sub">Revisão & Manutenção</div>
+    </div>
+  </div>
+  <div class="km-box" onclick="editKm()">
+    <div id="km-display" class="km-value"></div>
+    <input id="km-input" style="display:none" type="number" onblur="saveKm()" onkeydown="if(event.key==='Enter')saveKm()">
+    <div class="km-label">KM ATUAL</div>
+  </div>
+</header>
+
+<div id="alert-bar"></div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('dashboard', this)">📊 Dashboard</button>
+  <button class="tab" onclick="showTab('lista', this)">📋 Itens</button>
+</div>
+
+<main>
+  <!-- Dashboard -->
+  <div id="tab-dashboard" class="panel active">
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-icon">🔧</div>
+        <div class="stat-value" id="stat-total" style="color:var(--blue)">0</div>
+        <div class="stat-label">Total</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🚨</div>
+        <div class="stat-value" id="stat-urgent" style="color:var(--red)">0</div>
+        <div class="stat-label">Urgente</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⚠️</div>
+        <div class="stat-value" id="stat-attention" style="color:var(--yellow)">0</div>
+        <div class="stat-label">Atenção</div>
+      </div>
+    </div>
+
+    <div class="section-title">Por Categoria</div>
+    <div id="cat-list"></div>
+
+    <div class="section-title">Próximas Revisões</div>
+    <div id="next-list"></div>
+  </div>
+
+  <!-- Lista -->
+  <div id="tab-lista" class="panel">
+    <div class="list-header">
+      <div class="section-title" style="margin:0" id="list-count"></div>
+      <button class="btn-add" onclick="openNewModal()">+ ADICIONAR</button>
+    </div>
+    <div id="full-list"></div>
+  </div>
+</main>
+
+<!-- Modal detalhe -->
+<div class="modal-overlay" id="detail-modal" onclick="closeModal('detail-modal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modal-title"></div>
+        <div class="modal-sub" id="modal-cat"></div>
+      </div>
+      <button class="btn-close" onclick="closeModal('detail-modal')">✕</button>
+    </div>
+    <div id="modal-details"></div>
+    <button class="btn-done" id="btn-done" onclick="markDone()">✅ MARCAR COMO FEITO</button>
+    <button class="btn-delete" onclick="deleteItem()">🗑 REMOVER ITEM</button>
+  </div>
+</div>
+
+<!-- Modal novo item -->
+<div class="modal-overlay" id="new-modal" onclick="closeModal('new-modal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">➕ Novo Item</div>
+      <button class="btn-close" onclick="closeModal('new-modal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nome</label>
+      <input class="form-input" id="new-name" placeholder="Ex: Correia dentada">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Categoria</label>
+      <select class="form-select" id="new-cat">
+        <option>Motor</option><option>Freios</option><option>Pneus</option>
+        <option>Fluidos</option><option>Elétrica</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Intervalo (km)</label>
+      <input class="form-input" id="new-km" type="number" placeholder="Ex: 40000" value="10000">
+    </div>
+    <button class="btn-submit" onclick="addItem()">ADICIONAR</button>
+  </div>
+</div>
+
+<script>
+const CAT_COLORS = { Motor:"#FF6B35", Freios:"#E63946", Pneus:"#2EC4B6", Fluidos:"#4361EE", Elétrica:"#F4D03F" };
+const CAT_ICONS  = { Motor:"⚙️", Freios:"🛑", Pneus:"🔄", Fluidos:"💧", Elétrica:"⚡" };
+
+let state = {};
+let selectedId = null;
+
+async function load() {
+  const r = await fetch("/api/data");
+  state = await r.json();
+  render();
+}
+
+function getStatus(item) {
+  const remaining = item.last_km + item.km - state.current_km;
+  const pct = remaining / item.km;
+  if (remaining <= 0)  return { label:"VENCIDO",  color:"#E63946", bg:"#2d0a0d", pct:0, remaining };
+  if (pct <= 0.15)     return { label:"URGENTE",  color:"#FF6B35", bg:"#2d1200", pct, remaining };
+  if (pct <= 0.30)     return { label:"ATENÇÃO",  color:"#F4D03F", bg:"#2d2700", pct, remaining };
+  return                      { label:"OK",       color:"#2EC4B6", bg:"#002d2b", pct, remaining };
+}
+
+function fmtKm(n) { return Number(n).toLocaleString("pt-BR"); }
+
+function render() {
+  // header
+  document.getElementById("car-name-display").textContent = state.car_name;
+  document.getElementById("km-display").textContent = fmtKm(state.current_km);
+
+  const sorted = [...state.items].sort((a,b) => {
+    const o = {VENCIDO:0,URGENTE:1,"ATENÇÃO":2,OK:3};
+    return o[getStatus(a).label] - o[getStatus(b).label];
+  });
+
+  const urgent = sorted.filter(i => ["VENCIDO","URGENTE"].includes(getStatus(i).label));
+  const attn   = sorted.filter(i => getStatus(i).label === "ATENÇÃO");
+
+  // alert
+  const bar = document.getElementById("alert-bar");
+  if (urgent.length) {
+    bar.style.display = "block";
+    bar.textContent = `⚠️ ${urgent.length} item${urgent.length>1?"s":""} precisam de atenção imediata!`;
+  } else { bar.style.display = "none"; }
+
+  // stats
+  document.getElementById("stat-total").textContent   = state.items.length;
+  document.getElementById("stat-urgent").textContent  = urgent.length;
+  document.getElementById("stat-attention").textContent = attn.length;
+
+  // categories
+  const cats = [...new Set(state.items.map(i => i.category))];
+  document.getElementById("cat-list").innerHTML = cats.map(cat => {
+    const catItems = state.items.filter(i => i.category === cat);
+    const issues   = catItems.filter(i => getStatus(i).label !== "OK").length;
+    const col = CAT_COLORS[cat] || "#888";
+    return `<div class="cat-card" style="border-left:3px solid ${col}" onclick="showTab('lista',null)">
+      <div class="cat-left">
+        <span style="font-size:20px">${CAT_ICONS[cat]||"🔧"}</span>
+        <div><div class="cat-name">${cat}</div><div class="cat-count">${catItems.length} itens</div></div>
+      </div>
+      ${issues ? `<div class="badge">${issues}</div>` : ""}
+    </div>`;
+  }).join("");
+
+  // next 4
+  document.getElementById("next-list").innerHTML = sorted.slice(0,4).map(item => itemCard(item, false)).join("");
+
+  // full list
+  document.getElementById("list-count").textContent = `Todos os Itens (${state.items.length})`;
+  document.getElementById("full-list").innerHTML = sorted.map(item => itemCard(item, true)).join("");
+}
+
+function itemCard(item, bar) {
+  const st = getStatus(item);
+  const barPct = Math.max(0, Math.min(1, st.pct)) * 100;
+  const remText = st.remaining <= 0
+    ? `${fmtKm(Math.abs(st.remaining))} km vencido`
+    : `faltam ${fmtKm(st.remaining)} km`;
+  return `<div class="item-card" style="border-color:${st.color}33" onclick="openDetail(${item.id})">
+    <div class="item-top">
+      <div>
+        <div class="item-name">${CAT_ICONS[item.category]||""} ${item.name}</div>
+        <div class="item-cat">${item.category}</div>
+      </div>
+      <span class="item-status" style="color:${st.color};background:${st.bg}">${st.label}</span>
+    </div>
+    <div class="item-meta">
+      <span>Feito em ${item.last_date} · ${fmtKm(item.last_km)} km</span>
+      <span>${remText}</span>
+    </div>
+    ${bar ? `<div class="progress-bar"><div class="progress-fill" style="width:${barPct}%;background:${st.color}"></div></div>` : ""}
+  </div>`;
+}
+
+function openDetail(id) {
+  selectedId = id;
+  const item = state.items.find(i => i.id === id);
+  const st = getStatus(item);
+  document.getElementById("modal-title").textContent = item.name;
+  document.getElementById("modal-cat").textContent   = item.category;
+  const remText = st.remaining <= 0
+    ? `${fmtKm(Math.abs(st.remaining))} km vencido`
+    : `faltam ${fmtKm(st.remaining)} km`;
+  document.getElementById("modal-details").innerHTML = [
+    ["Intervalo",      `A cada ${fmtKm(item.km)} km`],
+    ["Última revisão", item.last_date],
+    ["KM da última",   `${fmtKm(item.last_km)} km`],
+    ["Próxima em",     `${fmtKm(item.last_km + item.km)} km`],
+    ["KM atual",       `${fmtKm(state.current_km)} km`],
+    ["Status",         remText],
+  ].map(([l,v]) => `<div class="detail-row"><span>${l}</span><span>${v}</span></div>`).join("");
+  document.getElementById("btn-done").textContent = `✅ MARCAR COMO FEITO (${fmtKm(state.current_km)} km)`;
+  openModal("detail-modal");
+}
+
+async function markDone() {
+  await fetch(`/api/item/done/${selectedId}`, { method:"POST" });
+  closeModal("detail-modal");
+  load();
+}
+
+async function deleteItem() {
+  if (!confirm("Remover este item?")) return;
+  await fetch(`/api/item/${selectedId}`, { method:"DELETE" });
+  closeModal("detail-modal");
+  load();
+}
+
+function openNewModal() { openModal("new-modal"); }
+
+async function addItem() {
+  const name = document.getElementById("new-name").value.trim();
+  const cat  = document.getElementById("new-cat").value;
+  const km   = document.getElementById("new-km").value;
+  if (!name) return alert("Digite o nome do item.");
+  await fetch("/api/item", {
+    method: "POST", headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ name, category: cat, km })
+  });
+  document.getElementById("new-name").value = "";
+  closeModal("new-modal");
+  load();
+}
+
+// KM editing
+function editKm() {
+  const input = document.getElementById("km-input");
+  document.getElementById("km-display").style.display = "none";
+  input.style.display = "block";
+  input.value = state.current_km;
+  input.focus();
+}
+async function saveKm() {
+  const val = parseInt(document.getElementById("km-input").value);
+  if (!isNaN(val)) {
+    await fetch("/api/km", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({km:val}) });
+  }
+  document.getElementById("km-input").style.display = "none";
+  document.getElementById("km-display").style.display = "block";
+  load();
+}
+
+// Car name editing
+function editCarName() {
+  const input = document.getElementById("car-name-input");
+  document.getElementById("car-name-display").style.display = "none";
+  input.style.display = "block";
+  input.value = state.car_name;
+  input.focus();
+}
+async function saveCarName() {
+  const val = document.getElementById("car-name-input").value.trim();
+  if (val) {
+    await fetch("/api/car_name", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({name:val}) });
+  }
+  document.getElementById("car-name-input").style.display = "none";
+  document.getElementById("car-name-display").style.display = "block";
+  load();
+}
+
+// Tabs
+function showTab(name, btn) {
+  document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.getElementById("tab-" + name).classList.add("active");
+  if (btn) btn.classList.add("active");
+  else document.querySelectorAll(".tab")[1].classList.add("active");
+}
+
+// Modals
+function openModal(id)  { document.getElementById(id).classList.add("open"); }
+function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+
+load();
+</script>
+</body>
+</html>

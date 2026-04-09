@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+﻿from flask import Flask, render_template, request, jsonify
 import json
 import os
 from datetime import date
@@ -6,22 +6,7 @@ from datetime import date
 app = Flask(__name__)
 DATA_FILE = "data.json"
 
-DEFAULT_DATA = {
-    "car_name": "Meu Carro",
-    "current_km": 52000,
-    "items": [
-        {"id": 1, "category": "Motor",   "name": "Troca de óleo",           "km": 5000,  "last_km": 47000, "last_date": "2024-01-10"},
-        {"id": 2, "category": "Motor",   "name": "Filtro de óleo",          "km": 5000,  "last_km": 47000, "last_date": "2024-01-10"},
-        {"id": 3, "category": "Motor",   "name": "Filtro de ar",            "km": 15000, "last_km": 40000, "last_date": "2023-06-01"},
-        {"id": 4, "category": "Freios",  "name": "Pastilhas dianteiras",    "km": 30000, "last_km": 25000, "last_date": "2022-09-15"},
-        {"id": 5, "category": "Freios",  "name": "Pastilhas traseiras",     "km": 40000, "last_km": 15000, "last_date": "2022-09-15"},
-        {"id": 6, "category": "Pneus",   "name": "Rodízio de pneus",        "km": 10000, "last_km": 44000, "last_date": "2023-11-20"},
-        {"id": 7, "category": "Pneus",   "name": "Alinhamento",             "km": 10000, "last_km": 44000, "last_date": "2023-11-20"},
-        {"id": 8, "category": "Fluidos", "name": "Fluido de freio",         "km": 20000, "last_km": 35000, "last_date": "2023-03-05"},
-        {"id": 9, "category": "Fluidos", "name": "Líquido de arrefecimento","km": 40000, "last_km": 15000, "last_date": "2021-07-12"},
-        {"id": 10,"category": "Elétrica","name": "Bateria",                 "km": 60000, "last_km": 0,     "last_date": "2021-01-08"},
-    ]
-}
+DEFAULT_DATA = {"car_name": "Meu Carro", "current_km": 52000, "items": [{"id": 1, "category": "Motor", "name": "Troca de oleo", "km": 5000, "last_km": 47000, "last_date": "2024-01-10"}, {"id": 2, "category": "Motor", "name": "Filtro de oleo", "km": 5000, "last_km": 47000, "last_date": "2024-01-10"}, {"id": 3, "category": "Motor", "name": "Filtro de ar", "km": 15000, "last_km": 40000, "last_date": "2023-06-01"}, {"id": 4, "category": "Freios", "name": "Pastilhas dianteiras", "km": 30000, "last_km": 25000, "last_date": "2022-09-15"}, {"id": 5, "category": "Freios", "name": "Pastilhas traseiras", "km": 40000, "last_km": 15000, "last_date": "2022-09-15"}, {"id": 6, "category": "Pneus", "name": "Rodizio de pneus", "km": 10000, "last_km": 44000, "last_date": "2023-11-20"}, {"id": 7, "category": "Pneus", "name": "Alinhamento", "km": 10000, "last_km": 44000, "last_date": "2023-11-20"}, {"id": 8, "category": "Fluidos", "name": "Fluido de freio", "km": 20000, "last_km": 35000, "last_date": "2023-03-05"}, {"id": 9, "category": "Fluidos", "name": "Liquido de arrefecimento", "km": 40000, "last_km": 15000, "last_date": "2021-07-12"}, {"id": 10, "category": "Eletrica", "name": "Bateria", "km": 60000, "last_km": 0, "last_date": "2021-01-08"}]}
 
 def load_data():
     if os.path.exists(DATA_FILE):
@@ -72,14 +57,7 @@ def add_item():
     data = load_data()
     body = request.json
     new_id = max((i["id"] for i in data["items"]), default=0) + 1
-    data["items"].append({
-        "id": new_id,
-        "category": body["category"],
-        "name": body["name"],
-        "km": int(body["km"]),
-        "last_km": data["current_km"],
-        "last_date": str(date.today()),
-    })
+    data["items"].append({"id": new_id, "category": body["category"], "name": body["name"], "km": int(body["km"]), "last_km": data["current_km"], "last_date": str(date.today())})
     save_data(data)
     return jsonify({"ok": True})
 
@@ -91,5 +69,5 @@ def delete_item(item_id):
     return jsonify({"ok": True})
 
 if __name__ == "__main__":
-    print("🚗 Car Control rodando em http://localhost:5000")
-   app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
